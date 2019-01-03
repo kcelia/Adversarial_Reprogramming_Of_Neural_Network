@@ -136,6 +136,7 @@ input_size = 224
 patch_size = 28
 
 model = ProgrammingNetwork(pretrained_model, input_size, patch_size)
+model.to(device)
 loss_function = nn.CrossEntropyLoss()
 optimizer = T.optim.Adam([model.p])
 
