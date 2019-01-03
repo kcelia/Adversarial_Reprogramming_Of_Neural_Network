@@ -89,7 +89,7 @@ def get_mnist(batch_size):
     ) 
     return train_loader, test_loader
 
-self.mask = get_mask(patch_size, input_size, channel_out, batch_size=1)[0].to(device)class ProgrammingNetwork(nn.Module):
+class ProgrammingNetwork(nn.Module):
     """
     This class is the module that contains the network
     that will be uilized and the associated programm 
@@ -114,6 +114,7 @@ self.mask = get_mask(patch_size, input_size, channel_out, batch_size=1)[0].to(de
         self.model = pretained_model
         self.p = T.autograd.Variable(T.randn((channel_out, input_size, input_size)).to(device), requires_grad=True)
         self.input_size = input_size
+        self.mask = get_mask(patch_size, input_size, channel_out, batch_size=1)[0].to(device)
         self.mask.requires_grad = False
 
     def forward(self, x):
