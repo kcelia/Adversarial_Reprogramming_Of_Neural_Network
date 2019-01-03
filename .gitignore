@@ -3,4 +3,5 @@
 *.pdf
 *.pth
 data/
+*.npy
 
