@@ -16,6 +16,8 @@ from random import shuffle
 import numpy as np
 import scipy
 import scipy.misc as misc
+from torch.utils.data import Dataset
+from torchvision import datasets, transforms
 
 #36 
 #4
@@ -56,7 +58,7 @@ def create_patch(nb_square, patch_size=36, square_size=4, border=True):
             patch[i, :] = 0.
             patch[:, i] = 0.
 
-    return torch.Tensor(patch).float()
+    return torch.Tensor([patch]).float()
 
 
 def x_to_X(x, X_size, channel_out=3):
@@ -108,36 +110,6 @@ def get_mask(patch_size, X_size, channel_out, batch_size=1):
     ones = T.ones((batch_size, channel_out, patch_size, patch_size))
     return x_to_X(ones, X_size, channel_out)
 
-def get_mnist(batch_size):
-    """
-    This function retruns the train and test loader of mnist 
-    dataset for a given batch_size
-
-    :param batch_size: size of the batch for data loader
-    
-    :type batch_size: int
-
-    :return: train and test loader
-    :rtype: tuple[torch.utils.data.DataLoader]
-    """
-    train_loader = T.utils.data.DataLoader(datasets.MNIST(
-        './data', train=True, download=True,
-        transform=transforms.Compose([
-            transforms.ToTensor(), 
-            transforms.Normalize((0.1307,), (0.3081,))
-        ])),
-        batch_size=batch_size, shuffle=True
-    ) 
-    test_loader = T.utils.data.DataLoader(datasets.MNIST(
-        './data', train=False, download=True,
-        transform=transforms.Compose([
-            transforms.ToTensor(),
-            transforms.Normalize((0.1307,), (0.3081,))
-        ])),
-        batch_size=batch_size, shuffle=True
-    ) 
-    return train_loader, test_loader
-
 def get_program(programming_network, path, imshow=False):
     """
     This function return the program P as a numpy and displays it 
@@ -164,6 +136,30 @@ def get_program(programming_network, path, imshow=False):
         plt.show()
     return img
 
+class SquaresDataset(Dataset):
+    def __init__(self, patch_size=36, square_size=4):
+        self.patch_size = patch_size
+        self.square_size = square_size
+
+    def __len__(self):
+        return 100000
+
+    def __getitem__(self, item):
+        y = np.random.randint(1, 10) 
+        return (
+            create_patch(y, self.patch_size, self.square_size, border=False), 
+            T.tensor(y).long()
+        )
+
+def get_counting_squares(batch_size): 
+
+    train_loader = T.utils.data.DataLoader(
+        SquaresDataset(),
+        batch_size=batch_size,
+        shuffle=True
+    )
+    
+    return train_loader
 
 
 class ProgrammingNetwork(nn.Module):
@@ -201,25 +197,26 @@ class ProgrammingNetwork(nn.Module):
         x_adv = x_to_X(x, self.input_size, self.p.shape[0]) + P
         return self.model(x_adv)
 
-
  
 batch_size = 16
-train_loader, test_loader = get_mnist(batch_size)
+train_loader = get_counting_squares(batch_size)
 
-pretrained_model = torchvision.models.resnet101(pretrained=True).eval()
+pretrained_model = torchvision.models.squeezenet1_0(pretrained=True).eval()
+
 input_size = 224
-patch_size = 28
+patch_size = 4
 
 model = ProgrammingNetwork(pretrained_model, input_size, patch_size)
 loss_function = nn.CrossEntropyLoss()
 optimizer = T.optim.Adam([model.p])
 
-PATH = "./models/resnet101_mnist.pth"
-nb_epochs = 10
+PATH = "./models/squeezenet1_0_counting_squares.pth"
+
+nb_epochs = 1
 loss_history = []
 
 for epoch in range(nb_epochs): 
-    for i, (x, y) in tqdm(enumerate(train_loader)):
+    for i, (x, y) in enumerate(tqdm(train_loader)):
         y_hat = model(x)
         optimizer.zero_grad()
         loss = loss_function(y_hat, y)
