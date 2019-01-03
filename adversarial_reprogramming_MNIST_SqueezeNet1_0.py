@@ -153,3 +153,17 @@ for epoch in range(nb_epochs):
         if not i % 50: #save each 50 batches
             T.save(model.state_dict(), "./models/squeezenet1_0_mnist.pth")
             np.save("loss_history", loss_history)
+
+np.save("loss_history", loss_history)
+
+#compute test accuracy
+test_accuracy = []
+for i, (x, y) in enumerate(tqdm(test_loader)):
+    y_hat = model(x.to(device))
+    (y_hat.argmax(1).to('cpu') == y).float()
+    loss_history.append(loss.item())
+    test_accuracy.extend((y_hat.argmax(1).to('cpu') == y).float().numpy())
+
+print("test accuracy : ", np.array(test_accuracy).mean())
+
+
