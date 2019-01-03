@@ -89,7 +89,7 @@ def get_mnist(batch_size):
     ) 
     return train_loader, test_loader
 
-class ProgrammingNetwork(nn.Module):
+self.mask = get_mask(patch_size, input_size, channel_out, batch_size=1)[0].to(device)class ProgrammingNetwork(nn.Module):
     """
     This class is the module that contains the network
     that will be uilized and the associated programm 
@@ -112,8 +112,7 @@ class ProgrammingNetwork(nn.Module):
         """
         super().__init__()
         self.model = pretained_model
-        self.p = T.autograd.Variable(T.randn((channel_out, input_size, input_size)), requires_grad=True)
-        self.mask = get_mask(patch_size, input_size, channel_out, batch_size=1)[0]
+        self.p = T.autograd.Variable(T.randn((channel_out, input_size, input_size)).to(device), requires_grad=True)
         self.input_size = input_size
         self.mask.requires_grad = False
 
@@ -121,14 +120,17 @@ class ProgrammingNetwork(nn.Module):
         #P = tanh (W + M)
         P = nn.Tanh()((1 - self.mask) * self.p) 
         #Xadv = hf (˜x; W) = X˜ + P
-        x_adv = x_to_X(x, self.input_size, self.p.shape[0]) + P
+        x_adv = x_to_X(x, self.input_size, self.p.shape[0]).to(device) + P
         return self.model(x_adv)
 
-    
+device = "cuda:0"
+
 batch_size = 16
 train_loader, test_loader = get_mnist(batch_size)
 
-pretrained_model = torchvision.models.resnet101(pretrained=True).eval()
+#pretrained_model = torchvision.models.resnet101(pretrained=True).eval()
+pretrained_model = torchvision.models.squeezenet1_0(pretrained=True).eval()
+
 input_size = 224
 patch_size = 28
 
@@ -140,15 +142,28 @@ optimizer = T.optim.Adam([model.p])
 nb_epochs = 10
 loss_history = []
 for epoch in range(nb_epochs): 
-    for i, (x, y) in tqdm(enumerate(train_loader)):
-        y_hat = model(x)
+    print("epoch : ", epoch)
+    for i, (x, y) in enumerate(tqdm(train_loader)):
+        y_hat = model(x.to(device))
         optimizer.zero_grad()
-        loss = loss_function(y_hat, y)
+        loss = loss_function(y_hat, y.to(device))
         loss.backward()
         optimizer.step()
         loss_history.append(loss.item())
-        if not i % 10: #save each 10 batches
-            T.save(model.state_dict(), "./models/resnet101_mnist.pth")
+        if not i % 50: #save each 50 batches
+            T.save(model.state_dict(), "./models/squeezenet1_0_mnist.pth")
+            np.save("loss_history", loss_history)
 
+np.save("loss_history", loss_history)
+
+#compute test accuracy
+test_accuracy = []
+for i, (x, y) in enumerate(tqdm(test_loader)):
+    y_hat = model(x.to(device))
+    (y_hat.argmax(1).to('cpu') == y).float()
+    loss_history.append(loss.item())
+    test_accuracy.extend((y_hat.argmax(1).to('cpu') == y).float().numpy())
+
+print("test accuracy : ", np.array(test_accuracy).mean())
 
 
