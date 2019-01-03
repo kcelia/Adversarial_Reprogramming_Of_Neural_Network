@@ -1,26 +1,21 @@
 import numpy as np
 
-import numpy as np
-
 import torch 
 import torch as T
 import torch.nn as nn
 
 import torchvision
+from torchvision import datasets, transforms
+from torch.utils.data import Dataset
 
 from tqdm import tqdm
-from torchvision import datasets, transforms
+from random import shuffle
 
 import matplotlib.pyplot as plt
-from random import shuffle
-import numpy as np
+
 import scipy
 import scipy.misc as misc
-from torch.utils.data import Dataset
-from torchvision import datasets, transforms
 
-#36 
-#4
 
 
 def create_patchv1(nb_square, patch_size=36, square_size=4, border=True):
@@ -47,19 +42,31 @@ def create_patchv1(nb_square, patch_size=36, square_size=4, border=True):
     return patch
 
 def create_patch(nb_square, patch_size=36, square_size=4, border=True):
+    """
+    :param nb_square: the number of squares to set on
+    :param patch_size: the size of the patch wich will be in the center of the img
+    :param square_size: the size of the squares <!> square_size < patch_size
+    :param border: a boolean, that allows to separate the squares (to have a better display)
+    
+    :type nb_square: int
+    :type patch_size: int
+    :type square_size: int
+    :type border: bool
 
+    :return: the new img 
+    :rtype: torch.tensor
+    """
     patch = [1] * nb_square + [0] * (16 - nb_square)
     shuffle(patch)
     patch = np.array(patch).reshape(square_size, square_size)
     patch = scipy.misc.imresize(patch, (patch_size, patch_size), interp='nearest') // 255
 
-    if border :
+    if border:
         for i in range(0, patch_size, patch_size // square_size):
             patch[i, :] = 0.
             patch[:, i] = 0.
 
     return torch.Tensor([patch]).float()
-
 
 def x_to_X(x, X_size, channel_out=3):
     """
