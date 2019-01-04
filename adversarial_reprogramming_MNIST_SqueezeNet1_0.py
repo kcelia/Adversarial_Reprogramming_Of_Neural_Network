@@ -119,12 +119,12 @@ class ProgrammingNetwork(nn.Module):
 
     def forward(self, x):
         #P = tanh (W + M)
-        P = nn.Tanh()((1 - self.mask) * self.p) 
+        P = nn.Tanh()((1 - self.mask) * self.p)
         #Xadv = hf (˜x; W) = X˜ + P
         x_adv = x_to_X(x, self.input_size, self.p.shape[0]).to(device) + P
         return self.model(x_adv)
 
-device = "cuda:0"
+device = "cpu"
 
 batch_size = 16
 train_loader, test_loader = get_mnist(batch_size)
@@ -153,7 +153,8 @@ for epoch in range(nb_epochs):
         optimizer.step()
         loss_history.append(loss.item())
         if not i % 50: #save each 50 batches
-            T.save(model.state_dict(), "./models/squeezenet1_0_mnist.pth")
+            #T.save(model.state_dict(), "./models/squeezenet1_0_mnist.pth")
+            np.save("./models/squeezenet1_0_mnist_program", model.p.detach().numpy())
             np.save("loss_history", loss_history)
 
 np.save("loss_history", loss_history)
@@ -163,7 +164,6 @@ test_accuracy = []
 for i, (x, y) in enumerate(tqdm(test_loader)):
     y_hat = model(x.to(device))
     (y_hat.argmax(1).to('cpu') == y).float()
-    loss_history.append(loss.item())
     test_accuracy.extend((y_hat.argmax(1).to('cpu') == y).float().numpy())
 
 print("test accuracy : ", np.array(test_accuracy).mean())
