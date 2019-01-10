@@ -120,13 +120,14 @@ class ProgrammingNetwork(nn.Module):
         self.device = device
         self.blur_sigma = blur_sigma
         self.model = pretained_model.to(self.device)
-        self.p = T.autograd.Variable(T.randn((channel_out, input_size, input_size)).to(self.device), requires_grad=True)
+        self.p = T.randn((channel_out, input_size, input_size))
         if blur_sigma:
             program = self.p.to("cpu").detach().permute(1, 2, 0).numpy()
             program = gaussian_filter(program, self.blur_sigma)
-            program = T.autograd.Variable(T.tensor(program).float().permute(2, 0, 1).to(self.device), requires_grad=True)
+            program = T.tensor(program).float().permute(2, 0, 1)
             self.p = program
         self.mask = get_mask(patch_size, input_size, channel_out, batch_size=1)[0]
+        self.p = T.autograd.Variable((self.p * (1 - self.mask)).to(self.device), requires_grad=True)
         self.input_size = input_size
         self.mask.requires_grad = False
 
@@ -137,8 +138,8 @@ class ProgrammingNetwork(nn.Module):
         x_adv = x_to_X(x, self.input_size, self.p.shape[0]).to(self.device) + P
         return self.model(x_adv)
 
-
-def train(model, train_loader, nb_epochs, optimizer, save_freq=100, save_path="./models/", test_loader=None, device="cpu"):
+#TODO: complete doc !
+def train(model, train_loader, nb_epochs, optimizer, C=0., reg_fun=None, save_freq=100, save_path="./models/", test_loader=None, device="cpu"):
     """
     This function is used to train our adversarial program
 
@@ -146,6 +147,8 @@ def train(model, train_loader, nb_epochs, optimizer, save_freq=100, save_path=".
     :param train_loader: train loader, in our case it can be MNIST_dataset, Shuffled_MNIST_dataset, Counting_squares_dataset
     :param nb_epochs: numbre of epochs 
     :param optimizer: the otpimizer
+    :param C:
+    :param reg_fun:
     :param save_freq: the state of our model will be saved each "save_freq" times 
     :param save_path: the state of our model that will be saved each  "save_freq" times in a path called save_path
     :param test_loader: specify if we want to get the test accuracy after each epoch else None
@@ -155,6 +158,8 @@ def train(model, train_loader, nb_epochs, optimizer, save_freq=100, save_path=".
     :type train_loader: torch.utils.data.dataloader.DataLoader
     :type nb_epochs: int
     :type optimizer: torch.optim
+    :type C:
+    :type reg_fun:
     :type save_freq: int
     :type save_path: str
     :type test_loader: torch.utils.data.dataloader.DataLoader
@@ -170,7 +175,7 @@ def train(model, train_loader, nb_epochs, optimizer, save_freq=100, save_path=".
         for i, (x, y) in enumerate(tqdm(train_loader)):
             y_hat = model(x)
             optimizer.zero_grad()
-            loss = loss_function(y_hat, y.to(device))
+            loss = loss_function(y_hat, y.to(device)) + (C * reg_fun(model.p) if reg_fun else 0.)
             loss.backward()
             optimizer.step()
             loss_history.append(loss.item())
@@ -210,11 +215,13 @@ def standard_normalization(matrix):
     abs_min = np.sign(minimum) * minimum
     return (matrix + abs_min) / (matrix.max() + abs_min)
 
+#TODO: complete doc !
 def tanh_scaler(matrix):
     """
     """
     return (np.tanh(matrix) + 1) / 2.
 
+#TODO: complete doc !
 def program_visualisation(model, path1, path2, norm=standard_normalization, imshow=False):
     """
     """

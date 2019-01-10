@@ -58,6 +58,12 @@ optimizer = T.optim.Adam([model.p])
 
 nb_epochs = 1
 nb_freq = 10
-model, loss_history = train(model, train_loader, nb_epochs, optimizer, nb_freq, PATH, device=DEVICE)
+model, loss_history = train(
+    model, train_loader, nb_epochs, optimizer,
+    C=.05, reg_fun=lambda x: x.abs().sum(), #adding L1 norm
+    save_freq=nb_freq, 
+    save_path=PATH, test_loader=None, device=DEVICE
+)
+
 
 program = get_program(model, PATH, imshow=True)
