@@ -176,10 +176,10 @@ def train(model, train_loader, nb_epochs, optimizer, save_freq=100, save_path=".
             loss_history.append(loss.item())
             if not i % save_freq:
                 T.save(model.p, save_path + "_{}b_{}e.pth".format(epoch, i))
-                np.save(save_path + "_loss_history", loss_history)
-                if test_loader:
-                    test_accuracy_history.append(run_test_accuracy(model, test_loader))
-                    np.save(save_path + "_test_accuracy_history", test_accuracy_history)
+                np.save(save_path + "_loss_history", loss_history)            
+        if test_loader:
+            test_accuracy_history.append(run_test_accuracy(model, test_loader))
+            np.save(save_path + "_test_accuracy_history", test_accuracy_history)
     return model, loss_history
 
 def run_test_accuracy(model, test_loader):
@@ -221,7 +221,7 @@ def program_visualisation(model, path1, path2, norm=standard_normalization, imsh
     img1 = get_program(model, path1, imshow=False)
     img2 = get_program(model, path2, imshow=False)
     diff = img2 - img1
-    images = list(map(norm, (img1, img2))) + [standard_normalization(diff)] #, diff)))
+    images = list(map(norm, (img1, img2))) + [standard_normalization(diff)]
 
     if imshow:
         fig = plt.figure(figsize=(10, 10))

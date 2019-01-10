@@ -58,6 +58,6 @@ optimizer = T.optim.Adam([model.p])
 
 nb_epochs = 1
 nb_freq = 10
-model, loss_history = train(model, train_loader, nb_epochs, optimizer, nb_freq, PATH, DEVICE)
+model, loss_history = train(model, train_loader, nb_epochs, optimizer, nb_freq, PATH, device=DEVICE)
 
 program = get_program(model, PATH, imshow=True)
