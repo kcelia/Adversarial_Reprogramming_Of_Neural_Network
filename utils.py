@@ -82,7 +82,7 @@ def get_program(path, imshow=False):
     :return: img 
     :rtype: numpy.ndarray
     """
-    program = torch.load(path)
+    program = torch.load(path, map_location="cpu")
 
     img = program.detach().permute(1, 2, 0).numpy()
     if imshow:
@@ -291,7 +291,7 @@ def program_visualisation(path1, path2, norm=standard_normalization, imshow=Fals
     if imshow:
         fig = plt.figure(figsize=(10, 10))
         columns, rows, j = len(images), 1, 0
-        titles = ["Program1", "Program2", "Difference"]
+        titles = ["Program", "Program after Learning", "Difference"]
         for i in range(1, columns * rows + 1):
             fig.add_subplot(rows, columns, i)
             plt.title(titles[j])
