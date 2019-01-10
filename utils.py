@@ -176,3 +176,24 @@ def train(model, train_loader, nb_epochs, optimizer, save_freq=100, save_path=".
                 np.save(save_path + "_loss_history", loss_history)
     return model, loss_history
 
+def run_test_accuracy(model, test_loader):
+    """
+    This function compute the accuracy for a given model
+
+    :param model: the model to evaluate
+    :param test_loader: the dataloader to evaluate on
+
+    :type model: ProgrammingNetwork
+    :type test_loader: torch.utils.data.dataloader.DataLoader
+
+    :return: the accuracy of the model
+    :rtype: float
+    """
+    test_accuracy = []
+    for i, (x, y) in enumerate(tqdm(test_loader)):
+        y_hat = model(x)
+        (y_hat.argmax(1).to('cpu') == y).float()
+        test_accuracy.extend((y_hat.argmax(1).to('cpu') == y).float().numpy())
+
+    return np.array(test_accuracy).mean()
+
