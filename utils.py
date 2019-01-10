@@ -127,12 +127,14 @@ class ProgrammingNetwork(nn.Module):
             self.p = program
         self.mask = get_mask(patch_size, input_size, channel_out, batch_size=1)[0]
         self.p = T.autograd.Variable((self.p * (1 - self.mask)).to(self.device), requires_grad=True)
+        self.mask = self.mask.to(self.device)
+        self.one = T.tensor(1.).to(self.device)
         self.input_size = input_size
         self.mask.requires_grad = False
 
     def forward(self, x):
         #P = tanh (W + M)
-        P = nn.Tanh()((1 - self.mask) * self.p) 
+        P = nn.Tanh()((self.one - self.mask) * self.p) 
         #Xadv = hf (˜x; W) = X˜ + P
         x_adv = x_to_X(x, self.input_size, self.p.shape[0]).to(self.device) + P
         return self.model(x_adv)
