@@ -67,12 +67,11 @@ def get_mask(patch_size, X_size, channel_out, batch_size=1):
     ones = T.ones((batch_size, channel_out, patch_size, patch_size))
     return x_to_X(ones, X_size, channel_out)
 
-def get_program(programming_network, path, imshow=False):
+def get_program(path, imshow=False):
     """
     This function return the program P as a numpy and displays it 
     according to the value of the imshow's attribut 
 
-    :param programming_network: model that we want to have its weights
     :param path: the path that contains the saved weights
     :param imshow: a boolean, if it's true then we display the weights P
 
@@ -138,7 +137,32 @@ class ProgrammingNetwork(nn.Module):
         x_adv = x_to_X(x, self.input_size, self.p.shape[0]).to(self.device) + P
         return self.model(x_adv)
 
-#TODO: complete doc !
+def reg_l1(x):
+    """
+    This function is a L1 regularisation for a given matrix x
+
+    :param x: the matrix to regularize
+
+    :type x: torch.Tensor
+
+    :return: the l1 norm of x
+    :rtype: torch.Tensor
+    """
+    return x.abs().mean()
+
+def reg_l2(x):
+    """
+    This function is a L2 regularisation for a given matrix x
+
+    :param x: the matrix to regularize
+
+    :type x: torch.Tensor
+
+    :return: the l2 norm of x
+    :rtype: torch.Tensor
+    """
+    return (x ** 2).mean()
+
 def train(model, train_loader, nb_epochs, optimizer, C=0., reg_fun=None, save_freq=100, save_path="./models/", test_loader=None, device="cpu"):
     """
     This function is used to train our adversarial program
@@ -147,8 +171,8 @@ def train(model, train_loader, nb_epochs, optimizer, C=0., reg_fun=None, save_fr
     :param train_loader: train loader, in our case it can be MNIST_dataset, Shuffled_MNIST_dataset, Counting_squares_dataset
     :param nb_epochs: numbre of epochs 
     :param optimizer: the otpimizer
-    :param C:
-    :param reg_fun:
+    :param C: the factor regularization
+    :param reg_fun: the regularization (should be pytorch graph friendly) put to None if no regularization
     :param save_freq: the state of our model will be saved each "save_freq" times 
     :param save_path: the state of our model that will be saved each  "save_freq" times in a path called save_path
     :param test_loader: specify if we want to get the test accuracy after each epoch else None
@@ -158,8 +182,8 @@ def train(model, train_loader, nb_epochs, optimizer, C=0., reg_fun=None, save_fr
     :type train_loader: torch.utils.data.dataloader.DataLoader
     :type nb_epochs: int
     :type optimizer: torch.optim
-    :type C:
-    :type reg_fun:
+    :type C: float
+    :type reg_fun: function or None
     :type save_freq: int
     :type save_path: str
     :type test_loader: torch.utils.data.dataloader.DataLoader
@@ -210,23 +234,55 @@ def run_test_accuracy(model, test_loader):
 
 def standard_normalization(matrix):
     """
+    This function normalize the value of the given matrix between 0 and 1.
+    This allows us to visualize the weigths of the pregram before the tanh
+    clipping and getting into the network.
+
+    :param matrix: the matrix to normalize
+
+    :type matrix: torch.Tensor
+
+    :return: the matrix normalized
+    :rtype: torch.Tensor
     """
     minimum = matrix.min()
     abs_min = np.sign(minimum) * minimum
     return (matrix + abs_min) / (matrix.max() + abs_min)
 
-#TODO: complete doc !
 def tanh_scaler(matrix):
     """
-    """
+    This function scaled the value of the given matrix between 0 and 1 
+    by using tanh then a rescale. This is the closest form of visualization
+    to the real program given as input.
+    
+    :param matrix: the matrix to normalize
+
+    :type matrix: torch.Tensor
+
+    :return: the matrix normalized
+    :rtype: torch.Tensor
+    """    
     return (np.tanh(matrix) + 1) / 2.
 
-#TODO: complete doc !
-def program_visualisation(model, path1, path2, norm=standard_normalization, imshow=False):
+def program_visualisation(path1, path2, norm=standard_normalization, imshow=False):
     """
+    This function is used for visualizing 2 programs and the difference between 2 programs
+
+    :param path1: the path to a first version of the pytorch saved program
+    :param path2: the path to a second version of the pytorch saved program
+    :param norm: the function to use for rescaling program values between [0, 1]
+    :param imshow: display or not the programs
+
+    :type path1: str
+    :type path2: str
+    :type norm: function
+    :type imshow: bool
+
+    :return: the tuple of the 2 programs and difference ready for visualization
+    :rtype: tuple[torch.Tensor]
     """
-    img1 = get_program(model, path1, imshow=False)
-    img2 = get_program(model, path2, imshow=False)
+    img1 = get_program(path1, imshow=False)
+    img2 = get_program(path2, imshow=False)
     diff = img2 - img1
     images = list(map(norm, (img1, img2))) + [standard_normalization(diff)]
 
