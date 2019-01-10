@@ -83,11 +83,9 @@ def get_program(programming_network, path, imshow=False):
     :return: img 
     :rtype: numpy.ndarray
     """
+    program = torch.load(path)
 
-    programming_network.load_state_dict(torch.load(path))
-    programming_network.eval()
-
-    img = programming_network.p.detach().permute(1, 2, 0).numpy()
+    img = program.detach().permute(1, 2, 0).numpy()
     if imshow:
         plt.imshow(img)
         plt.show()
