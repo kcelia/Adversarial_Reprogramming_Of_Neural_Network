@@ -138,7 +138,7 @@ class ProgrammingNetwork(nn.Module):
         return self.model(x_adv)
 
 
-def train(model, train_loader, nb_epochs, optimizer, save_freq=100, save_path="./models/", device="cpu"):
+def train(model, train_loader, nb_epochs, optimizer, save_freq=100, save_path="./models/", test_loader=None, device="cpu"):
     """
     This function is used to train our adversarial program
 
@@ -148,6 +148,7 @@ def train(model, train_loader, nb_epochs, optimizer, save_freq=100, save_path=".
     :param optimizer: the otpimizer
     :param save_freq: the state of our model will be saved each "save_freq" times 
     :param save_path: the state of our model that will be saved each  "save_freq" times in a path called save_path
+    :param test_loader: specify if we want to get the test accuracy after each epoch else None
     :param device: the device used for training 
 
     :type model: ProgrammingNetwork
@@ -156,12 +157,14 @@ def train(model, train_loader, nb_epochs, optimizer, save_freq=100, save_path=".
     :type optimizer: torch.optim
     :type save_freq: int
     :type save_path: str
+    :type test_loader: torch.utils.data.dataloader.DataLoader
     :type device: str
 
     :return: the model modified and a list of the training loss
     :rtype: tuple(ProgrammingNetwork, list)
     """
     loss_history = []
+    test_accuracy_history = []
     loss_function = nn.CrossEntropyLoss()
     for epoch in range(nb_epochs): 
         for i, (x, y) in enumerate(tqdm(train_loader)):
@@ -174,6 +177,9 @@ def train(model, train_loader, nb_epochs, optimizer, save_freq=100, save_path=".
             if not i % save_freq:
                 T.save(model.p, save_path + "_{}b_{}e.pth".format(epoch, i))
                 np.save(save_path + "_loss_history", loss_history)
+                if test_loader:
+                    test_accuracy_history.append(run_test_accuracy(model, test_loader))
+                    np.save(save_path + "_test_accuracy_history", test_accuracy_history)
     return model, loss_history
 
 def run_test_accuracy(model, test_loader):
