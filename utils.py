@@ -173,7 +173,8 @@ def train(model, train_loader, nb_epochs, optimizer, save_freq=100, save_path=".
             loss.backward()
             optimizer.step()
             loss_history.append(loss.item())
-            if not i % save_freq: #save each save_freq batches
-                T.save(model.state_dict(), save_path + "_{}b_{}e.pth".format(epoch, i))
+            if not i % save_freq:
+                T.save(model.p, save_path + "_{}b_{}e.pth".format(epoch, i))
+                np.save(save_path + "_loss_history", loss_history)
     return model, loss_history
 
