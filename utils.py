@@ -15,6 +15,7 @@ import matplotlib.pyplot as plt
 
 import scipy
 import scipy.misc as misc
+from scipy.ndimage import gaussian_filter
 
 
 def x_to_X(x, X_size, channel_out=3):
@@ -99,7 +100,7 @@ class ProgrammingNetwork(nn.Module):
     that will be learned to hijak the first one
     """
 
-    def __init__(self, pretained_model, input_size, patch_size, channel_out=3, device="cpu"):
+    def __init__(self, pretained_model, input_size, patch_size, channel_out=3, blur_sigma=0., device="cpu"):
         """
         Constructor
 
@@ -107,18 +108,26 @@ class ProgrammingNetwork(nn.Module):
         :param input_size: the img's size excepected by pretrained_model
         :param patch_size: the size of the small target domain img
         :param channel_out: nb channel
+        :param blur_sigma: 0 if no bluring else the sigma used to blur the program before training
         :param device: device used for training
         
         :type pretrained_model: modul
         :type input_size: int
         :type patch_size: int
         :type channel_out: int
+        :type blur_sigma: float
         :type device: str
         """
         super().__init__()
         self.device = device
+        self.blur_sigma = blur_sigma
         self.model = pretained_model.to(self.device)
         self.p = T.autograd.Variable(T.randn((channel_out, input_size, input_size)).to(self.device), requires_grad=True)
+        if blur_sigma:
+            program = self.p.to("cpu").detach().permute(1, 2, 0).numpy()
+            program = gaussian_filter(program, self.blur_sigma)
+            program = T.autograd.Variable(T.tensor(program).float().permute(2, 0, 1).to(self.device), requires_grad=True)
+            self.p = program
         self.mask = get_mask(patch_size, input_size, channel_out, batch_size=1)[0]
         self.input_size = input_size
         self.mask.requires_grad = False
@@ -129,6 +138,7 @@ class ProgrammingNetwork(nn.Module):
         #Xadv = hf (˜x; W) = X˜ + P
         x_adv = x_to_X(x, self.input_size, self.p.shape[0]).to(self.device) + P
         return self.model(x_adv)
+
 
 def train(model, train_loader, nb_epochs, optimizer, save_freq=100, save_path="./models/", device="cpu"):
     """
