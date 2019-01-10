@@ -9,7 +9,7 @@ import torchvision
 from tqdm import tqdm
 from torchvision import datasets, transforms
 
-from utils import ProgrammingNetwork, get_program, train
+from utils import ProgrammingNetwork, get_program, train, reg_l1, reg_l2
 
 
 def get_mnist(batch_size):
@@ -56,11 +56,11 @@ patch_size = 28
 model = ProgrammingNetwork(pretrained_model, input_size, patch_size, blur_sigma=1.5, device=DEVICE)
 optimizer = T.optim.Adam([model.p])
 
-nb_epochs = 1
+nb_epochs = 20
 nb_freq = 10
 model, loss_history = train(
     model, train_loader, nb_epochs, optimizer,
-    C=.05, reg_fun=lambda x: (x ** 2).sum() ** .5, #adding L1 norm
+    C=.05, reg_fun=reg_l2,
     save_freq=nb_freq, 
     save_path=PATH, test_loader=None, device=DEVICE
 )

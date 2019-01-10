@@ -16,7 +16,7 @@ import matplotlib.pyplot as plt
 import scipy
 import scipy.misc as misc
 
-from utils import ProgrammingNetwork, get_program, train
+from utils import ProgrammingNetwork, get_program, train, reg_l1, reg_l2
 
 
 def create_patchv1(nb_square, patch_size=36, square_size=4, border=True):
@@ -109,9 +109,14 @@ patch_size = 4
 model = ProgrammingNetwork(pretrained_model, input_size, patch_size, device=DEVICE)
 optimizer = T.optim.Adam([model.p])
 
-nb_epochs = 1
+nb_epochs = 20
 nb_freq = 10
-model, loss_history = train(model, train_loader, nb_epochs, optimizer, nb_freq, PATH, device=DEVICE)
+model, loss_history = train(
+    model, train_loader, nb_epochs, optimizer,
+    C=.05, reg_fun=reg_l2,
+    save_freq=nb_freq, 
+    save_path=PATH, test_loader=None, device=DEVICE
+)
 
 program = get_program(model, PATH, imshow=True)
 
