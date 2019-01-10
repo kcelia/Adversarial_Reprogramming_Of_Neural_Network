@@ -203,3 +203,37 @@ def run_test_accuracy(model, test_loader):
 
     return np.array(test_accuracy).mean()
 
+def standard_normalization(matrix):
+    """
+    """
+    minimum = matrix.min()
+    abs_min = np.sign(minimum) * minimum
+    return (matrix + abs_min) / (matrix.max() + abs_min)
+
+def tanh_scaler(matrix):
+    """
+    """
+    return (np.tanh(matrix) + 1) / 2.
+
+def program_visualisation(model, path1, path2, norm=standard_normalization, imshow=False):
+    """
+    """
+    img1 = get_program(model, path1, imshow=False)
+    img2 = get_program(model, path2, imshow=False)
+    diff = img2 - img1
+    images = list(map(norm, (img1, img2))) + [standard_normalization(diff)] #, diff)))
+
+    if imshow:
+        fig = plt.figure(figsize=(10, 10))
+        columns, rows, j = len(images), 1, 0
+        titles = ["Program1", "Program2", "Difference"]
+        for i in range(1, columns * rows + 1):
+            fig.add_subplot(rows, columns, i)
+            plt.title(titles[j])
+            plt.imshow(images[j])
+            j += 1
+        fig.suptitle(str(norm).split()[1].replace('_', ' '), fontsize=15)
+        plt.show()
+
+    return img1, img2, diff
+
