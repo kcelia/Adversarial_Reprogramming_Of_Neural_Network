@@ -5,9 +5,13 @@ This is a PyTorch re-implementation for the ICLR'19 paper:
 provided by : [kcelia 👩🏻‍💻](https://github.com/kcelia/) & [VieVie31 👨🏻‍💻](https://github.com/VieVie31/)
 
 
+## Example of learned program from random noise on MNIST with SqueezeNet
 
 ![program visualisation](./imgs/program_visualisation.png)
 
+## Visualisation of the learning process
+
+![program learning](./imgs/program_learning.gif)
 
 
 ```
