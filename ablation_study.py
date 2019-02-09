@@ -90,10 +90,20 @@ model = make_programming_network(pretrained_model, device=DEVICE)
 bands_width = list(range(1, 11)) + list(range(15, 51, 5)) + [100, 112]
 band_value = 0
 
+test_pruning_accuracy = {}
+for band_width in bands_width:
+    test_pruning_accuracy[band_width] = prune_program(
+        model, PATH, 
+        band_width, 
+        band_value=0, 
+        device=DEVICE
+    )
+    print("\n - accuracy for bandwidth {} : {}".format(
+        band_width, 
+        test_pruning_accuracy[band_width]
+    ))
+    np.save("./models/MNIST_Squeeze1_0_test_pruning_accuracy", test_pruning_accuracy)
 
-test_pruning_accuracy = {band_width: prune_program(model, PATH, band_width, band_value=0, device=DEVICE) for band_width in bands_width }
-
-np.save("./models/MNIST_Squeeze1_0_test_pruning_accuracy", test_pruning_accuracy)
 
 
 
