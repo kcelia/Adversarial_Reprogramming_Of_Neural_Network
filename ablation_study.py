@@ -1,11 +1,16 @@
-
 import numpy as np
+
 import torch 
 import torch as T
+
 import torchvision
+
 from torchvision import datasets, transforms
-from utils import get_program, tanh_scaler, ProgrammingNetwork, run_test_accuracy
+
 from tqdm import tqdm
+
+from utils import get_program, tanh_scaler, ProgrammingNetwork, run_test_accuracy
+
 
 def get_mnist(batch_size):
     """
@@ -38,19 +43,19 @@ def get_mnist(batch_size):
     return train_loader, test_loader
 
 def make_programming_network(pretrained_model, input_size=224, patch_size=28, device="cpu"):
-    model = ProgrammingNetwork(pretrained_model, input_size, patch_size, blur_sigma=1.5, device="cpu")
+    model = ProgrammingNetwork(pretrained_model, input_size, patch_size, blur_sigma=1.5, device=device)
     return model
 
-def run_test_accuracy(model, test_loader):
+def run_test_accuracy(model, test_loader, device='cpu'):
     test_accuracy = []
     for i, (x, y) in enumerate(tqdm(test_loader)):
         y_hat = model(x)
-        (y_hat.argmax(1).to('cpu') == y).float()
-        test_accuracy.extend((y_hat.argmax(1).to('cpu') == y).float().numpy())
+        (y_hat.argmax(1).to(device) == y).float()
+        test_accuracy.extend((y_hat.argmax(1).to(device) == y).float().numpy())
 
     return np.array(test_accuracy).mean()
 
-def prune_program(model, path, band_width, band_value=0, batch_size=16, location="cpu"):
+def prune_program(model, path, band_width, band_value=0, batch_size=16, location="cpu", device='cpu'):
     #profondeur,  largeur, hauteur 
     p = torch.load(path, map_location=location)
     p[:, 0: band_width, :] = p[:, -band_width:, :] = band_value
@@ -61,15 +66,16 @@ def prune_program(model, path, band_width, band_value=0, batch_size=16, location
     model.p.requires_grad = False #eval mode
 
     _, test_loader = get_mnist(batch_size)
-    return run_test_accuracy(model, test_loader)
+    return run_test_accuracy(model, test_loader, device)
 
-
+DEVICE = "cpu"
+PATH = "a.pth"
 pretrained_model = torchvision.models.squeezenet1_0(pretrained=True).eval()
-model = make_programming_network(pretrained_model)
+model = make_programming_network(pretrained_model, device=DEVICE)
 
 bands_width = list(range(0, 11)) + list(range(15, 51, 5)) + [100, 112]
 band_value = 0
-PATH = "a.pth"
+
 
 test_pruning_accuracy = {band_width: prune_program(model, PATH, band_width, band_value=0) for band_width in bands_width }
 
