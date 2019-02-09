@@ -50,8 +50,8 @@ def run_test_accuracy(model, test_loader, device='cpu'):
     test_accuracy = []
     for i, (x, y) in enumerate(tqdm(test_loader)):
         y_hat = model(x.to(device))
-        (y_hat.argmax(1).to(device) == y).float()
-        test_accuracy.extend((y_hat.argmax(1).to(device) == y).float().numpy())
+        (y_hat.argmax(1).to("cpu") == y).float()
+        test_accuracy.extend((y_hat.argmax(1).to("cpu") == y).float().numpy())
 
     return np.array(test_accuracy).mean()
 
@@ -65,8 +65,10 @@ def prune_program(model, path, band_width, band_value=0, batch_size=16, location
     model.p = new_p
     model.p.requires_grad = False #eval mode
 
+    model = to_device(model, device=device)
+
     _, test_loader = get_mnist(batch_size)
-    return run_test_accuracy(model, test_loader, device)
+    return run_test_accuracy(model, test_loader, device=device)
 
 def to_device(programmingNetwork, device="cpu"):
     programmingNetwork.device = device
@@ -74,10 +76,12 @@ def to_device(programmingNetwork, device="cpu"):
         programmingNetwork.p.to(device),
         requires_grad=True
     )
-    programmingNetwork.model.to(device)
+    programmingNetwork.mask  = programmingNetwork.mask.to(device)
+    programmingNetwork.one   = programmingNetwork.one.to(device)
+    programmingNetwork.model = programmingNetwork.model.to(device)
     return programmingNetwork
 
-DEVICE = "cpu"
+DEVICE = "cuda:0"
 PATH = "/tmp/a.pth"
 pretrained_model = torchvision.models.squeezenet1_0(pretrained=True).eval()
 model = make_programming_network(pretrained_model, device=DEVICE)
@@ -87,7 +91,7 @@ bands_width = list(range(1, 11)) + list(range(15, 51, 5)) + [100, 112]
 band_value = 0
 
 
-test_pruning_accuracy = {band_width: to_device(prune_program(model, PATH, band_width, band_value=0)) for band_width in bands_width }
+test_pruning_accuracy = {band_width: prune_program(model, PATH, band_width, band_value=0, device=DEVICE) for band_width in bands_width }
 
 np.save("./models/MNIST_Squeeze1_0_test_pruning_accuracy", test_pruning_accuracy)
 
