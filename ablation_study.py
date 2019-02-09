@@ -68,10 +68,21 @@ def prune_program(model, path, band_width, band_value=0, batch_size=16, location
     _, test_loader = get_mnist(batch_size)
     return run_test_accuracy(model, test_loader, device)
 
+def to_device(programmingNetwork, device="cpu"):
+    programmingNetwork.device = device
+    programmingNetwork.p = T.autograd.Variable(
+        programmingNetwork.p.to(device),
+        requires_grad=True
+    )
+    programmingNetwork.model.to(device)
+    return programmingNetwork
+
 DEVICE = "cpu"
 PATH = "a.pth"
 pretrained_model = torchvision.models.squeezenet1_0(pretrained=True).eval()
 model = make_programming_network(pretrained_model, device=DEVICE)
+
+model = to_device(model, DEVICE)
 
 bands_width = list(range(0, 11)) + list(range(15, 51, 5)) + [100, 112]
 band_value = 0
