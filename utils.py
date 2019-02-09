@@ -55,11 +55,13 @@ def get_mask(patch_size, X_size, channel_out, batch_size=1, ignore_bandwidth=0):
     :param X_size: the new size of the img
     :param channel_out: nb channels
     :param batch_size: nb times that the mask will be replicated
+    :param ignore_bandwidth: size of the band to add to the mask
 
     :type patch_size: int
     :type X_size: int
     :type channel_out: int
     :type batch_size: int
+    :type ignore_bandwidth: int
     
     :return: binary mask
     :rtype: torch.Tensor 
@@ -110,6 +112,7 @@ class ProgrammingNetwork(nn.Module):
         :param patch_size: the size of the small target domain img
         :param channel_out: nb channel
         :param blur_sigma: 0 if no bluring else the sigma used to blur the program before training
+        :param ignore_bandwidth: size of the non learnable band to add
         :param device: device used for training
         
         :type pretrained_model: modul
@@ -117,6 +120,7 @@ class ProgrammingNetwork(nn.Module):
         :type patch_size: int
         :type channel_out: int
         :type blur_sigma: float
+        :type ignore_bandwidth: int
         :type device: str
         """
         super().__init__()
