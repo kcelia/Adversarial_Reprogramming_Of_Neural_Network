@@ -82,13 +82,12 @@ PATH = "a.pth"
 pretrained_model = torchvision.models.squeezenet1_0(pretrained=True).eval()
 model = make_programming_network(pretrained_model, device=DEVICE)
 
-model = to_device(model, DEVICE)
 
-bands_width = list(range(0, 11)) + list(range(15, 51, 5)) + [100, 112]
+bands_width = list(range(1, 11)) + list(range(15, 51, 5)) + [100, 112]
 band_value = 0
 
 
-test_pruning_accuracy = {band_width: prune_program(model, PATH, band_width, band_value=0) for band_width in bands_width }
+test_pruning_accuracy = {band_width: to_device(prune_program(model, PATH, band_width, band_value=0)) for band_width in bands_width }
 
 np.save("./models/MNIST_Squeeze1_0_test_pruning_accuracy", test_pruning_accuracy)
 
