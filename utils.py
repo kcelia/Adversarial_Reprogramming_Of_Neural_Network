@@ -46,7 +46,7 @@ def x_to_X(x, X_size, channel_out=3):
 
     return X
 
-def get_mask(patch_size, X_size, channel_out, batch_size=1):
+def get_mask(patch_size, X_size, channel_out, batch_size=1, ignore_bandwidth=0):
     """
     This function return the mask for an img of size patch_size 
     which is in the center of a bigger on with size X_size
@@ -65,7 +65,11 @@ def get_mask(patch_size, X_size, channel_out, batch_size=1):
     :rtype: torch.Tensor 
     """
     ones = T.ones((batch_size, channel_out, patch_size, patch_size))
-    return x_to_X(ones, X_size, channel_out)
+    m = x_to_X(ones, X_size, channel_out)
+    if ignore_bandwidth:
+        m[:, :, :ignore_bandwidth] = m[:, :, -ignore_bandwidth:] = 1
+        m[:, :, :, :ignore_bandwidth] = m[:, :, :, -ignore_bandwidth:] = 1
+    return m
 
 def get_program(path, imshow=False):
     """
@@ -97,7 +101,7 @@ class ProgrammingNetwork(nn.Module):
     that will be learned to hijak the first one
     """
 
-    def __init__(self, pretained_model, input_size, patch_size, channel_out=3, blur_sigma=0., device="cpu"):
+    def __init__(self, pretained_model, input_size, patch_size, channel_out=3, blur_sigma=0., ignore_bandwidth=0, device="cpu"):
         """
         Constructor
 
@@ -125,7 +129,7 @@ class ProgrammingNetwork(nn.Module):
             program = gaussian_filter(program, self.blur_sigma)
             program = T.tensor(program).float().permute(2, 0, 1)
             self.p = program
-        self.mask = get_mask(patch_size, input_size, channel_out, batch_size=1)[0]
+        self.mask = get_mask(patch_size, input_size, channel_out, batch_size=1, ignore_bandwidth=ignore_bandwidth)[0]
         self.p = T.autograd.Variable((self.p * (1 - self.mask)).to(self.device), requires_grad=True)
         self.mask = self.mask.to(self.device)
         self.one = T.tensor(1.).to(self.device)
