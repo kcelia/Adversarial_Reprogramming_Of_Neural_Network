@@ -49,7 +49,7 @@ def make_programming_network(pretrained_model, input_size=224, patch_size=28, de
 def run_test_accuracy(model, test_loader, device='cpu'):
     test_accuracy = []
     for i, (x, y) in enumerate(tqdm(test_loader)):
-        y_hat = model(x)
+        y_hat = model(x.to(device))
         (y_hat.argmax(1).to(device) == y).float()
         test_accuracy.extend((y_hat.argmax(1).to(device) == y).float().numpy())
 
@@ -78,7 +78,7 @@ def to_device(programmingNetwork, device="cpu"):
     return programmingNetwork
 
 DEVICE = "cpu"
-PATH = "a.pth"
+PATH = "/tmp/a.pth"
 pretrained_model = torchvision.models.squeezenet1_0(pretrained=True).eval()
 model = make_programming_network(pretrained_model, device=DEVICE)
 
