@@ -137,7 +137,7 @@ model, loss_history = train(
     model, train_loader, nb_epochs, optimizer,
     C=.05, reg_fun=reg_l2,
     save_freq=nb_freq, 
-    save_path=PATH, test_loader=None, device=DEVICE
+    save_path=PATH, test_loader=test_loader, device=DEVICE
 )
 
 program = get_program(model, PATH, imshow=True)
