@@ -70,12 +70,13 @@ def create_patch(nb_square, patch_size=36, square_size=4, border=True):
     return torch.Tensor([patch]).float()
 
 class SquaresDataset(Dataset):
-    def __init__(self, patch_size=36, square_size=4):
+    def __init__(self, patch_size=36, square_size=4, dataset_size=100000):
         self.patch_size = patch_size
         self.square_size = square_size
+        self.dataset_size = dataset_size
 
     def __len__(self):
-        return 100000
+        return self.dataset_size
 
     def __getitem__(self, item):
         y = np.random.randint(1, 10) 
@@ -84,10 +85,10 @@ class SquaresDataset(Dataset):
             T.tensor(y).long()
         )
 
-def get_counting_squares(batch_size): 
+def get_counting_squares(batch_size, dataset_size=100000): 
 
     train_loader = T.utils.data.DataLoader(
-        SquaresDataset(),
+        SquaresDataset(dataset_size=dataset_size),
         batch_size=batch_size,
         shuffle=True
     )
@@ -96,10 +97,11 @@ def get_counting_squares(batch_size):
 
 
 DEVICE = 'cpu'
-PATH = "./models/squeezenet1_0_counting_squares"
+PATH = "./models/squeezenet1_0_counting_squares_"
 
 batch_size = 16
 train_loader = get_counting_squares(batch_size)
+test_loader  = get_counting_squares(batch_size, 1000)
 
 pretrained_model = torchvision.models.squeezenet1_0(pretrained=True).eval()
 
@@ -115,7 +117,7 @@ model, loss_history = train(
     model, train_loader, nb_epochs, optimizer,
     C=.05, reg_fun=reg_l2,
     save_freq=nb_freq, 
-    save_path=PATH, test_loader=None, device=DEVICE
+    save_path=PATH, test_loader=test_loader, device=DEVICE
 )
 
 program = get_program(model, PATH, imshow=True)
