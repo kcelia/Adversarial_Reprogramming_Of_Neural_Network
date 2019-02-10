@@ -54,6 +54,8 @@ input_size = 224
 patch_size = 28
 ignore_bandwidth = 0
 
+PATH += "_bandwidth_" + str(ignore_bandwidth) + "_"
+
 model = ProgrammingNetwork(
     pretrained_model, input_size, 
     patch_size, blur_sigma=1.5, 
