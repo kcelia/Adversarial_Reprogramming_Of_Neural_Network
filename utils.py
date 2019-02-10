@@ -141,6 +141,9 @@ class ProgrammingNetwork(nn.Module):
         self.mask.requires_grad = False
 
     def forward(self, x):
+        #rescale the input bewteen [-1, 1]
+        x = (x - x.min()) / (x.max() - x.min())
+        x = (x * 2) - 1
         #P = tanh (W + M)
         P = nn.Tanh()((self.one - self.mask) * self.p) 
         #Xadv = hf (˜x; W) = X˜ + P
