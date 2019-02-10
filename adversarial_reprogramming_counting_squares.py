@@ -96,8 +96,8 @@ def get_counting_squares(batch_size, dataset_size=100000):
     return train_loader
 
 
-DEVICE = 'cpu'
-PATH = "./models/squeezenet1_0_counting_squares_"
+DEVICE = 'cuda:0'
+PATH = "./models/squeezenet1_0_counting_squares_cici_"
 
 batch_size = 16
 train_loader = get_counting_squares(batch_size)
