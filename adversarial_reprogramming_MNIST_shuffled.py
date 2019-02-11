@@ -136,9 +136,13 @@ train_loader, test_loader = get_mnist(batch_size)
 pretrained_model = torchvision.models.squeezenet1_0(pretrained=True).eval()
 
 input_size = 224
-patch_size = 4
+patch_size = 36
 
+<<<<<<< HEAD
 model = ProgrammingShuffledNetwork(pretrained_model, input_size, patch_size, blur_sigma=.5)
+=======
+model = ProgrammingShuffledNetwork(pretrained_model, input_size, patch_size, blur_sigma=1.5)
+>>>>>>> e539bac8d3418db63b32c2cd5ce50a4a41580c8e
 optimizer = T.optim.Adam([model.p])
 
 nb_epochs = 20
