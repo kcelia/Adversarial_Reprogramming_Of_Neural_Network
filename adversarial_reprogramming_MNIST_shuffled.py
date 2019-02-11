@@ -107,6 +107,7 @@ class ProgrammingShuffledNetwork(nn.Module):
         """
         super().__init__()
         self.device = device
+        self.blur_sigma = blur_sigma
         self.model = pretained_model.to(self.device)
         self.p = T.autograd.Variable(T.randn((channel_out, input_size, input_size)).to(self.device), requires_grad=True)
         if blur_sigma:
@@ -138,11 +139,7 @@ pretrained_model = torchvision.models.squeezenet1_0(pretrained=True).eval()
 input_size = 224
 patch_size = 36
 
-<<<<<<< HEAD
 model = ProgrammingShuffledNetwork(pretrained_model, input_size, patch_size, blur_sigma=.5)
-=======
-model = ProgrammingShuffledNetwork(pretrained_model, input_size, patch_size, blur_sigma=1.5)
->>>>>>> e539bac8d3418db63b32c2cd5ce50a4a41580c8e
 optimizer = T.optim.Adam([model.p])
 
 nb_epochs = 20
