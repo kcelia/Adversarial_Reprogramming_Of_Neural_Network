@@ -117,7 +117,7 @@ class ProgrammingShuffledNetwork(nn.Module):
         x_adv = x_to_X(x, self.input_size, self.p.shape[0]).to(self.device) + P
         return self.model(x_adv)
 
-DEVICE = 'cuda:0'
+DEVICE = 'cpu'
 PATH = "./models/squeezenet1_0_MNIST_shuffled"
 
 batch_size = 16
