@@ -97,7 +97,7 @@ def get_counting_squares(batch_size, dataset_size=100000):
 
 
 DEVICE = 'cuda:0'
-PATH = "./models/squeezenet1_0_counting_squares_cici_"
+PATH = "./models/squeezenet1_0_counting_squares_"
 
 batch_size = 16
 train_loader = get_counting_squares(batch_size)
@@ -106,9 +106,9 @@ test_loader  = get_counting_squares(batch_size, 1000)
 pretrained_model = torchvision.models.squeezenet1_0(pretrained=True).eval()
 
 input_size = 224
-patch_size = 4
+patch_size = 36
 
-model = ProgrammingNetwork(pretrained_model, input_size, patch_size, device=DEVICE)
+model = ProgrammingNetwork(pretrained_model, input_size, patch_size, blur_sigma=0.5, device=DEVICE)
 optimizer = T.optim.Adam([model.p])
 
 nb_epochs = 20
