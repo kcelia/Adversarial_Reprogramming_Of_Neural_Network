@@ -138,7 +138,7 @@ pretrained_model = torchvision.models.squeezenet1_0(pretrained=True).eval()
 input_size = 224
 patch_size = 4
 
-model = ProgrammingShuffledNetwork(pretrained_model, input_size, patch_size)
+model = ProgrammingShuffledNetwork(pretrained_model, input_size, patch_size, blur_sigma=.5)
 optimizer = T.optim.Adam([model.p])
 
 nb_epochs = 20
