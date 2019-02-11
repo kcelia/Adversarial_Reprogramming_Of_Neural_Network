@@ -117,7 +117,7 @@ class ProgrammingShuffledNetwork(nn.Module):
         x_adv = x_to_X(x, self.input_size, self.p.shape[0]).to(self.device) + P
         return self.model(x_adv)
 
-DEVICE = 'cpu'
+DEVICE = 'cuda:0'
 PATH = "./models/squeezenet1_0_MNIST_shuffled"
 
 batch_size = 16
@@ -126,9 +126,9 @@ train_loader, test_loader = get_mnist(batch_size)
 pretrained_model = torchvision.models.squeezenet1_0(pretrained=True).eval()
 
 input_size = 224
-patch_size = 4
+patch_size = 36
 
-model = ProgrammingShuffledNetwork(pretrained_model, input_size, patch_size)
+model = ProgrammingShuffledNetwork(pretrained_model, input_size, patch_size, blur_sigma=1.5)
 optimizer = T.optim.Adam([model.p])
 
 nb_epochs = 20
