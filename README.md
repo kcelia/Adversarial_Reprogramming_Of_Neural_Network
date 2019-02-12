@@ -14,6 +14,11 @@ provided by : [kcelia 👩🏻‍💻](https://github.com/kcelia/) & [VieVie31 �
 ![program learning](./imgs/program_learning.gif)
 
 
+## Poster of our re-implementation & experiments
+
+![poster](./imgs/poster.png)
+
+
 ```
 @inproceedings{
     elsayed2018adversarial,
