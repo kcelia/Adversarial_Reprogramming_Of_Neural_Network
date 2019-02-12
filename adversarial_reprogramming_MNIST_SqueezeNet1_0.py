@@ -42,8 +42,9 @@ def get_mnist(batch_size):
     ) 
     return train_loader, test_loader
 
+#501-07 3825new727
 
-DEVICE = "cpu"
+DEVICE = "cuda:0"
 PATH = "./models/squeezenet1_0_MNIST"
 
 batch_size = 16
@@ -54,16 +55,18 @@ input_size = 224
 patch_size = 28
 ignore_bandwidth = 0
 
+PATH += "_bandwidth_" + str(ignore_bandwidth) + "_"
+
 model = ProgrammingNetwork(
     pretrained_model, input_size, 
     patch_size, blur_sigma=1.5, 
     ignore_bandwidth=ignore_bandwidth, 
     device=DEVICE
 )
-optimizer = T.optim.Adam([model.p])
+optimizer = T.optim.Adam([model.p], lr=.05, weight_decay=.96)
 
-nb_epochs = 20
-nb_freq = 10
+nb_epochs = 50
+nb_freq = 20
 model, loss_history = train(
     model, train_loader, nb_epochs, optimizer,
     C=.05, reg_fun=reg_l2,

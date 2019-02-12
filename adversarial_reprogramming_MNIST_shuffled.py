@@ -17,6 +17,8 @@ import matplotlib.pyplot as plt
 import scipy
 import scipy.misc as misc
 
+from scipy.ndimage import gaussian_filter
+
 from utils import get_program, get_mask, x_to_X, train, reg_l1, reg_l2
 
 
@@ -85,7 +87,7 @@ class ProgrammingShuffledNetwork(nn.Module):
     with a shuffled input
     """
 
-    def __init__(self, pretained_model, input_size, patch_size, channel_out=3, device='cpu'):
+    def __init__(self, pretained_model, input_size, patch_size, channel_out=3, blur_sigma=0.,device='cpu'):
         """
         Constructor
 
@@ -93,18 +95,27 @@ class ProgrammingShuffledNetwork(nn.Module):
         :param input_size: the img's size excepected by pretrained_model
         :param patch_size: the size of the small target domain img
         :param channel_out: nb channel
+        :param blur_sigma: 0 if no bluring else the sigma used to blur the program before training
         :param device: device used for training
         
         :type pretrained_model: modul
         :type input_size: int
         :type patch_size: int
         :type channel_out: int
+        :type blur_sigma: float
         :type device: str
         """
         super().__init__()
         self.device = device
+        self.blur_sigma = blur_sigma
         self.model = pretained_model.to(self.device)
         self.p = T.autograd.Variable(T.randn((channel_out, input_size, input_size)).to(self.device), requires_grad=True)
+        if blur_sigma:
+            program = self.p.to("cpu").detach().permute(1, 2, 0).numpy()
+            program = gaussian_filter(program, self.blur_sigma)
+            program = T.tensor(program).float().permute(2, 0, 1)
+            self.p = program
+            
         self.mask = shuffle_mnist(get_mask(patch_size, input_size, channel_out, batch_size=1)[0])
         self.input_size = input_size
         self.mask.requires_grad = False
@@ -126,9 +137,9 @@ train_loader, test_loader = get_mnist(batch_size)
 pretrained_model = torchvision.models.squeezenet1_0(pretrained=True).eval()
 
 input_size = 224
-patch_size = 4
+patch_size = 36
 
-model = ProgrammingShuffledNetwork(pretrained_model, input_size, patch_size)
+model = ProgrammingShuffledNetwork(pretrained_model, input_size, patch_size, blur_sigma=.5)
 optimizer = T.optim.Adam([model.p])
 
 nb_epochs = 20
